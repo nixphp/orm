@@ -74,7 +74,7 @@ abstract class AbstractRepository
     protected function buildPivotTable(string $a, string $b): string
     {
         $items = [$a, $b];
-        sort($items); // In-place alphabetisch sortiert
+        sort($items); // In-place sorting alphabetically
         return implode('_', $items);
     }
 
