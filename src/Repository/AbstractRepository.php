@@ -83,6 +83,32 @@ abstract class AbstractRepository
         return $this->findOneBy($field, $value) ?? $this->create($field, $value);
     }
 
+    public function findOrCreateManyBy(string $field, array $values): array
+    {
+        if (empty($values)) return [];
+
+        $placeholders = implode(', ', array_fill(0, count($values), '?'));
+        $sql = "SELECT * FROM {$this->getTable()} WHERE {$field} IN ($placeholders)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($values);
+        $rows = $stmt->fetchAll();
+
+        $existing = [];
+        foreach ($rows as $row) {
+            $key = $row[$field];
+            $existing[$key] = $this->hydrate($row);
+        }
+
+        $missing = array_diff($values, array_keys($existing));
+
+        foreach ($missing as $value) {
+            $entity = $this->create($field, $value);
+            $existing[$value] = $entity;
+        }
+
+        return array_map(fn($val) => $existing[$val], $values);
+    }
+
     protected function create(string $field, mixed $value): EntityInterface
     {
         $class = $this->getEntityClass();
