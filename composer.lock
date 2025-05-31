@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nixphp/database.git",
-                "reference": "cd9ad738abaec4f5f3a146c00201c27f2f082059"
+                "reference": "db3893534c291e0aa27ba34756d1f25cff15a991"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nixphp/database/zipball/cd9ad738abaec4f5f3a146c00201c27f2f082059",
-                "reference": "cd9ad738abaec4f5f3a146c00201c27f2f082059",
+                "url": "https://api.github.com/repos/nixphp/database/zipball/db3893534c291e0aa27ba34756d1f25cff15a991",
+                "reference": "db3893534c291e0aa27ba34756d1f25cff15a991",
                 "shasum": ""
             },
             "require": {
@@ -51,7 +51,7 @@
                 "issues": "https://github.com/nixphp/database/issues",
                 "source": "https://github.com/nixphp/database/tree/main"
             },
-            "time": "2025-05-31T13:03:53+00:00"
+            "time": "2025-05-31T21:04:31+00:00"
         },
         {
             "name": "nixphp/framework",
@@ -59,12 +59,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nixphp/framework.git",
-                "reference": "a26cb657b5b994c659216b23dff4a255b23ed382"
+                "reference": "ee9dea43ce3106f2981cf514ee16baf10f217169"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nixphp/framework/zipball/a26cb657b5b994c659216b23dff4a255b23ed382",
-                "reference": "a26cb657b5b994c659216b23dff4a255b23ed382",
+                "url": "https://api.github.com/repos/nixphp/framework/zipball/ee9dea43ce3106f2981cf514ee16baf10f217169",
+                "reference": "ee9dea43ce3106f2981cf514ee16baf10f217169",
                 "shasum": ""
             },
             "require": {
@@ -109,7 +109,7 @@
                 "issues": "https://github.com/nixphp/framework/issues",
                 "source": "https://github.com/nixphp/framework/tree/main"
             },
-            "time": "2025-05-31T12:59:15+00:00"
+            "time": "2025-05-31T21:07:22+00:00"
         },
         {
             "name": "nyholm/psr7",
