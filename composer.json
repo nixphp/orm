@@ -13,10 +13,7 @@
   "autoload": {
     "psr-4": {
       "NixPHP\\ORM\\": "src/"
-    },
-    "files": [
-      "src/functions.php"
-    ]
+    }
   },
   "autoload-dev": {
     "psr-4": {

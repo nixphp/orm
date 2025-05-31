@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nixphp/database.git",
-                "reference": "d6dff84fb63d87d881d8be51d2684f2fec95cab6"
+                "reference": "cd9ad738abaec4f5f3a146c00201c27f2f082059"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nixphp/database/zipball/d6dff84fb63d87d881d8be51d2684f2fec95cab6",
-                "reference": "d6dff84fb63d87d881d8be51d2684f2fec95cab6",
+                "url": "https://api.github.com/repos/nixphp/database/zipball/cd9ad738abaec4f5f3a146c00201c27f2f082059",
+                "reference": "cd9ad738abaec4f5f3a146c00201c27f2f082059",
                 "shasum": ""
             },
             "require": {
@@ -32,9 +32,6 @@
             "default-branch": true,
             "type": "nixphp-plugin",
             "autoload": {
-                "files": [
-                    "src/functions.php"
-                ],
                 "psr-4": {
                     "NixPHP\\Database\\": "src/"
                 }
@@ -54,7 +51,7 @@
                 "issues": "https://github.com/nixphp/database/issues",
                 "source": "https://github.com/nixphp/database/tree/main"
             },
-            "time": "2025-05-25T20:11:34+00:00"
+            "time": "2025-05-31T13:03:53+00:00"
         },
         {
             "name": "nixphp/framework",
@@ -62,12 +59,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nixphp/framework.git",
-                "reference": "dde178eceaa6d34cb8c1f3b785fd409ee378c4b8"
+                "reference": "a26cb657b5b994c659216b23dff4a255b23ed382"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nixphp/framework/zipball/dde178eceaa6d34cb8c1f3b785fd409ee378c4b8",
-                "reference": "dde178eceaa6d34cb8c1f3b785fd409ee378c4b8",
+                "url": "https://api.github.com/repos/nixphp/framework/zipball/a26cb657b5b994c659216b23dff4a255b23ed382",
+                "reference": "a26cb657b5b994c659216b23dff4a255b23ed382",
                 "shasum": ""
             },
             "require": {
@@ -112,7 +109,7 @@
                 "issues": "https://github.com/nixphp/framework/issues",
                 "source": "https://github.com/nixphp/framework/tree/main"
             },
-            "time": "2025-05-24T20:04:44+00:00"
+            "time": "2025-05-31T12:59:15+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -585,16 +582,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.4.0",
+            "version": "v5.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "447a020a1f875a434d62f2a401f53b82a396e494"
+                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/447a020a1f875a434d62f2a401f53b82a396e494",
-                "reference": "447a020a1f875a434d62f2a401f53b82a396e494",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/ae59794362fe85e051a58ad36b289443f57be7a9",
+                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9",
                 "shasum": ""
             },
             "require": {
@@ -637,9 +634,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.4.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.5.0"
             },
-            "time": "2024-12-30T11:07:19+00:00"
+            "time": "2025-05-31T08:24:38+00:00"
         },
         {
             "name": "phar-io/manifest",
