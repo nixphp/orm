@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace NixPHP\ORM\Repository;
 
 use NixPHP\ORM\Core\EntityInterface;
@@ -18,9 +20,42 @@ abstract class AbstractRepository
 
     abstract protected function getEntityClass(): string;
 
+    protected function getEntity(): EntityInterface
+    {
+        $class = $this->getEntityClass();
+        return new $class();
+    }
+
     protected function getTable(bool $singular = false): string
     {
-        return (new ($this->getEntityClass()))->getTableName($singular);
+        $entity = $this->getEntity();
+
+        $table = $entity->table
+            ?? strtolower(basename(str_replace('\\', '/', $this->getEntityClass()))) . 's';
+
+        if ($singular && str_ends_with($table, 's')) {
+            return substr($table, 0, -1); // naive Singularform
+        }
+
+        return $table;
+    }
+
+    protected function getPivotTable(string $relatedClass, string $selfTable, string $relatedTable): string
+    {
+        $entity = $this->getEntity();
+
+        if (!empty($entity->pivotTables[$relatedClass])) {
+            return $entity->pivotTables[$relatedClass];
+        }
+
+        $relatedEntity = new $relatedClass();
+        if (!empty($relatedEntity->pivotTables[$this->getEntityClass()])) {
+            return $relatedEntity->pivotTables[$this->getEntityClass()];
+        }
+
+        $items = [$selfTable, $relatedTable];
+        sort($items);
+        return implode('_', $items);
     }
 
     public function findAll(): array
@@ -32,50 +67,74 @@ abstract class AbstractRepository
         return $this->hydrateMany($rows);
     }
 
-    public function findBy(string $field, mixed $value): array
-    {
-        $sql = "SELECT * FROM {$this->getTable()} WHERE {$field} = :value";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['value' => $value]);
-        $rows = $stmt->fetchAll();
+    public function findBy(
+        array|string $criteria,
+        mixed $value = null,
+        array $orderBy = [],
+        ?int $limit = null,
+        ?int $offset = null
+    ): array {
+        $sql = "SELECT * FROM {$this->getTable()} WHERE 1=1";
+        $params = [];
 
-        return $this->hydrateMany($rows);
+        if (is_string($criteria)) {
+            $criteria = [$criteria => $value];
+        }
+
+        foreach ($criteria as $field => $val) {
+            $sql .= " AND {$field} = :{$field}";
+            $params[":{$field}"] = $val;
+        }
+
+        if (!empty($orderBy)) {
+            $parts = [];
+            foreach ($orderBy as $field => $dir) {
+                $dir = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
+                $parts[] = "{$field} {$dir}";
+            }
+            $sql .= " ORDER BY " . implode(', ', $parts);
+        }
+
+        if ($limit !== null) {
+            $sql .= " LIMIT " . (int)$limit;
+        }
+        if ($offset !== null) {
+            $sql .= " OFFSET " . (int)$offset;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $this->hydrateMany($stmt->fetchAll());
     }
 
-    public function findOneBy(string $field, mixed $value): ?EntityInterface
-    {
-        $sql = "SELECT * FROM {$this->getTable()} WHERE {$field} = :value LIMIT 1";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['value' => $value]);
-        $row = $stmt->fetch();
-
-        return $row ? $this->hydrate($row) : null;
+    public function findOneBy(
+        array|string $criteria,
+        mixed $value = null,
+        array $orderBy = []
+    ): ?EntityInterface {
+        $results = $this->findBy($criteria, $value, $orderBy, limit: 1);
+        return $results[0] ?? null;
     }
 
     public function findByPivot(string $pivotWithClass, int $pivotId): array
     {
-        $thisTable     = (new ($this->getEntityClass()))->getTableName(true);
-        $pivotWith     = (new $pivotWithClass())->getTableName(true);
-        $pivotTable    = $this->buildPivotTable($thisTable, $pivotWith);
+        $thisTable     = $this->getTable(true);
+        $relatedTable  = strtolower(basename(str_replace('\\', '/', $pivotWithClass)));
+
+        $pivotTable    = $this->getPivotTable($pivotWithClass, $thisTable, $relatedTable);
 
         $colSelf       = $thisTable . '_id';
-        $colPivot      = $pivotWith . '_id';
+        $colPivot      = $relatedTable . '_id';
 
         $sql = "SELECT {$thisTable}s.* FROM {$thisTable}s
             INNER JOIN {$pivotTable} ON {$pivotTable}.{$colSelf} = {$thisTable}s.id
             WHERE {$pivotTable}.{$colPivot} = :id";
 
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute(['id' => $pivotId]);
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $pivotId]);
 
-    return $this->hydrateMany($stmt->fetchAll());
-    }
-    
-    protected function buildPivotTable(string $a, string $b): string
-    {
-        $items = [$a, $b];
-        sort($items); // In-place sorting alphabetically
-        return implode('_', $items);
+        return $this->hydrateMany($stmt->fetchAll());
     }
 
     public function findOrCreateBy(string $field, mixed $value): EntityInterface
