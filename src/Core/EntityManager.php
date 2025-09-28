@@ -11,13 +11,48 @@ class EntityManager
 {
     protected array $stored = [];
 
+    private int $transactionLevel = 0;
+
     public function __construct(
         protected PDO $pdo
     ) {}
 
+    public function begin(): void
+    {
+        if ($this->transactionLevel === 0) {
+            $this->pdo->beginTransaction();
+        } else {
+            $this->pdo->exec("SAVEPOINT LEVEL{$this->transactionLevel}");
+        }
+
+        $this->transactionLevel++;
+    }
+
+    public function commit(): void
+    {
+        $this->transactionLevel--;
+
+        if ($this->transactionLevel === 0) {
+            $this->pdo->commit();
+        } else {
+            $this->pdo->exec("RELEASE SAVEPOINT LEVEL{$this->transactionLevel}");
+        }
+    }
+
+    public function rollback(): void
+    {
+        $this->transactionLevel--;
+
+        if ($this->transactionLevel === 0) {
+            $this->pdo->rollBack();
+        } else {
+            $this->pdo->exec("ROLLBACK TO SAVEPOINT LEVEL{$this->transactionLevel}");
+        }
+    }
+
     public function save(EntityInterface $root): void
     {
-        $this->pdo->beginTransaction();
+        $this->begin();
 
         try {
             $entities = $this->collectEntities($root);
@@ -48,9 +83,9 @@ class EntityManager
                 }
             }
 
-            $this->pdo->commit();
+            $this->commit();
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            $this->rollBack();
             throw $e;
         }
     }
