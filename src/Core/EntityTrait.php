@@ -39,7 +39,7 @@ trait EntityTrait
         $reflection = new ReflectionClass($this);
         $fields = [];
 
-        foreach ($reflection->getProperties() as $prop) {
+        foreach ($reflection->getProperties(\ReflectionProperty::IS_PROTECTED) as $prop) {
             $name = $prop->getName();
             $prop->setAccessible(true);
 
