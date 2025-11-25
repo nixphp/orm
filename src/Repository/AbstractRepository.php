@@ -11,11 +11,15 @@ use function NixPHP\ORM\em;
 
 abstract class AbstractRepository
 {
-    protected PDO $pdo;
+    protected ?PDO $pdo;
 
     public function __construct(?PDO $pdo = null)
     {
         $this->pdo = $pdo ?? database();
+
+        if (null === $this->pdo) {
+            throw new \RuntimeException('No database connection available.');
+        }
     }
 
     abstract protected function getEntityClass(): string;
