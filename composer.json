@@ -20,16 +20,6 @@
       "Tests\\": "tests/"
     }
   },
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../nixphp-framework"
-    },
-    {
-      "type": "path",
-      "url": "../nixphp-database"
-    }
-  ],
   "require": {
     "php": ">=8.3",
     "ext-pdo": "*",
