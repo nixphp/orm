@@ -13,10 +13,16 @@ class EntityManager
 
     private int $transactionLevel = 0;
 
+    /**
+     * @param PDO $pdo
+     */
     public function __construct(
         protected PDO $pdo
     ) {}
 
+    /**
+     * @return void
+     */
     public function begin(): void
     {
         if ($this->transactionLevel === 0) {
@@ -28,6 +34,9 @@ class EntityManager
         $this->transactionLevel++;
     }
 
+    /**
+     * @return void
+     */
     public function commit(): void
     {
         $this->transactionLevel--;
@@ -39,6 +48,9 @@ class EntityManager
         }
     }
 
+    /**
+     * @return void
+     */
     public function rollback(): void
     {
         $this->transactionLevel--;
@@ -50,6 +62,12 @@ class EntityManager
         }
     }
 
+    /**
+     * @param EntityInterface $root
+     *
+     * @return void
+     * @throws Exception
+     */
     public function save(EntityInterface $root): void
     {
         $this->begin();
@@ -90,6 +108,12 @@ class EntityManager
         }
     }
 
+    /**
+     * @param EntityInterface $entity
+     * @param array           $seen
+     *
+     * @return array|EntityInterface[]
+     */
     protected function collectEntities(EntityInterface $entity, array &$seen = []): array
     {
         $id = spl_object_hash($entity);
@@ -111,6 +135,11 @@ class EntityManager
         return $result;
     }
 
+    /**
+     * @param EntityInterface $entity
+     *
+     * @return void
+     */
     protected function upsert(EntityInterface $entity): void
     {
         $table = $entity->getTableName();
@@ -133,6 +162,12 @@ class EntityManager
         }
     }
 
+    /**
+     * @param EntityInterface $parent
+     * @param EntityInterface $child
+     *
+     * @return bool
+     */
     protected function isOneToMany(EntityInterface $parent, EntityInterface $child): bool
     {
         $fk = $parent->getTableName(true) . '_id';
@@ -140,6 +175,12 @@ class EntityManager
         return $ref->hasProperty($fk);
     }
 
+    /**
+     * @param EntityInterface $child
+     * @param EntityInterface $parent
+     *
+     * @return void
+     */
     protected function injectForeignKey(EntityInterface $child, EntityInterface $parent): void
     {
         $fk = $parent->getTableName(true) . '_id';
@@ -149,6 +190,12 @@ class EntityManager
         $child->{$fk} = $parent->getId();
     }
 
+    /**
+     * @param EntityInterface $a
+     * @param EntityInterface $b
+     *
+     * @return void
+     */
     protected function insertPivot(EntityInterface $a, EntityInterface $b): void
     {
         $tables = [$a->getTableName(true), $b->getTableName(true)];
@@ -165,11 +212,21 @@ class EntityManager
         ]);
     }
 
+    /**
+     * @param EntityInterface $entity
+     *
+     * @return bool
+     */
     protected function isStored(EntityInterface $entity): bool
     {
         return isset($this->stored[spl_object_hash($entity)]);
     }
 
+    /**
+     * @param EntityInterface $entity
+     *
+     * @return void
+     */
     protected function markStored(EntityInterface $entity): void
     {
         $this->stored[spl_object_hash($entity)] = true;

@@ -1,9 +1,16 @@
 <?php
 
-use NixPHP\ORM\Core\EntityManager;
-use function NixPHP\app;
-use function NixPHP\Database\database;
+declare(strict_types=1);
 
-app()->container()->set('em', function() {
-    return new EntityManager(database());
-});
+use NixPHP\Core\Container;
+use NixPHP\ORM\Core\EntityManager;
+use NixPHP\Database\Core\Database;
+use function NixPHP\app;
+
+app()->container()->set(
+    EntityManager::class,
+    fn(Container $container) =>
+        new EntityManager(
+            $container->get(Database::class)->getConnection()
+        )
+);
