@@ -8,23 +8,39 @@ use ReflectionClass;
 
 trait EntityTrait
 {
+    /**
+     * @return string
+     */
     public function getPrimaryKey(): string
     {
         return 'id';
     }
 
+    /**
+     * @return int|string|null
+     */
     public function getId(): int|string|null
     {
         $property = $this->getPrimaryKey();
         return $this->{$property} ?? null;
     }
 
+    /**
+     * @param int|string $id
+     *
+     * @return void
+     */
     public function setId(int|string $id): void
     {
         $property = $this->getPrimaryKey();
         $this->{$property} = $id;
     }
 
+    /**
+     * @param bool $singular
+     *
+     * @return string
+     */
     public function getTableName(bool $singular = false): string
     {
         $result = strtolower(substr(static::class, strrpos(static::class, '\\') + 1));
@@ -34,6 +50,9 @@ trait EntityTrait
         return $result . 's';
     }
 
+    /**
+     * @return array
+     */
     public function getFields(): array
     {
         $reflection = new ReflectionClass($this);
@@ -55,6 +74,9 @@ trait EntityTrait
         return $fields;
     }
 
+    /**
+     * @return array
+     */
     public function getRelations(): array
     {
         $reflection = new ReflectionClass($this);
@@ -74,6 +96,11 @@ trait EntityTrait
         return $relations;
     }
 
+    /**
+     * @param mixed $value
+     *
+     * @return bool
+     */
     private function isArrayOfEntities(mixed $value): bool
     {
         if (!is_array($value) || empty($value)) return false;
@@ -87,6 +114,11 @@ trait EntityTrait
         return true;
     }
 
+    /**
+     * @param EntityInterface $entity
+     *
+     * @return bool
+     */
     private function isAbstract(EntityInterface $entity): bool
     {
         return (new \ReflectionClass($entity))->isAbstract();

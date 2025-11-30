@@ -14,6 +14,13 @@ abstract class AbstractModel implements EntityInterface
 
     protected ?int $id;
 
+    /**
+     * Constructs a new instance of the class and initializes its properties based on the provided data.
+     *
+     * @param array|null $data An optional array of key-value pairs used to initialize the properties of the class.
+     *
+     * @return void
+     */
     public function __construct(?array $data = [])
     {
         $this->id = $data['id'] ?? null;

@@ -7,7 +7,7 @@ use NixPHP\ORM\Repository\AbstractRepository;
 use function NixPHP\app;
 use function NixPHP\Database\database;
 
-function em():? EntityManager
+function em(): EntityManager
 {
     return app()->container()->get(EntityManager::class);
 }
