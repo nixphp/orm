@@ -105,7 +105,9 @@ class EntityManager
             $this->commit();
         } catch (Throwable $e) {
             $this->rollBack();
-            throw new DatabaseException($e->getMessage(), $e->getCode(), $e);
+            $code = $e->getCode();
+            $normalizedCode = is_numeric($code) ? (int)$code : 0;
+            throw new DatabaseException($e->getMessage(), $normalizedCode, $e);
         }
     }
 

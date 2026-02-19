@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NixPHP\ORM\Repository;
 
 use Exception;
+use InvalidArgumentException;
 use NixPHP\ORM\Core\EntityInterface;
 use PDO;
 use Throwable;
@@ -16,6 +17,11 @@ abstract class AbstractRepository
         protected PDO $pdo
     ) {
     }
+
+    /**
+     * @var array<int, string>
+     */
+    protected array $allowedColumns = [];
 
     /**
      * @return class-string<EntityInterface>
@@ -75,12 +81,48 @@ abstract class AbstractRepository
         return implode('_', $items);
     }
 
+    protected function getColumnWhitelist(): array
+    {
+        if ($this->allowedColumns !== []) {
+            return $this->allowedColumns;
+        }
+
+        $entity = $this->getEntity();
+        $fields = array_keys($entity->getFields());
+
+        return array_unique(array_merge([$entity->getPrimaryKey()], $fields));
+    }
+
+    protected function quoteIdentifier(string $identifier): string
+    {
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $identifier)) {
+            throw new InvalidArgumentException("Invalid identifier: {$identifier}");
+        }
+
+        return '"' . str_replace('"', '""', $identifier) . '"';
+    }
+
+    protected function quoteColumn(string $column): string
+    {
+        if (!in_array($column, $this->getColumnWhitelist(), true)) {
+            throw new InvalidArgumentException("Column not allowed: {$column}");
+        }
+
+        return $this->quoteIdentifier($column);
+    }
+
+    protected function quoteTableName(string $table): string
+    {
+        return $this->quoteIdentifier($table);
+    }
+
     /**
      * @return array
      */
     public function findAll(): array
     {
-        $sql = "SELECT * FROM {$this->getTable()}";
+        $table = $this->quoteTableName($this->getTable());
+        $sql = "SELECT * FROM {$table}";
         $stmt = $this->pdo->query($sql);
         $rows = $stmt->fetchAll();
 
@@ -103,7 +145,8 @@ abstract class AbstractRepository
         ?int $limit    = null,
         ?int $offset   = null
     ): array {
-        $sql = "SELECT * FROM {$this->getTable()} WHERE 1=1";
+        $table = $this->quoteTableName($this->getTable());
+        $sql = "SELECT * FROM {$table} WHERE 1=1";
         $params = [];
 
         if (is_string($criteria)) {
@@ -111,7 +154,8 @@ abstract class AbstractRepository
         }
 
         foreach ($criteria as $field => $val) {
-            $sql .= " AND {$field} = :{$field}";
+            $column = $this->quoteColumn($field);
+            $sql .= " AND {$column} = :{$field}";
             $params[":{$field}"] = $val;
         }
 
@@ -119,7 +163,8 @@ abstract class AbstractRepository
             $parts = [];
             foreach ($orderBy as $field => $dir) {
                 $dir = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
-                $parts[] = "{$field} {$dir}";
+                $quoted = $this->quoteColumn($field);
+                $parts[] = "{$quoted} {$dir}";
             }
             $sql .= " ORDER BY " . implode(', ', $parts);
         }
@@ -169,9 +214,16 @@ abstract class AbstractRepository
         $colSelf       = $thisTable . '_id';
         $colPivot      = $relatedTable . '_id';
 
-        $sql = "SELECT {$thisTable}s.* FROM {$thisTable}s
-            INNER JOIN {$pivotTable} ON {$pivotTable}.{$colSelf} = {$thisTable}s.id
-            WHERE {$pivotTable}.{$colPivot} = :id";
+        $pluralTable = $this->getTable();
+        $quotedMainTable = $this->quoteTableName($pluralTable);
+        $quotedPivotTable = $this->quoteTableName($pivotTable);
+        $quotedIdColumn = $this->quoteIdentifier('id');
+        $quotedColSelf = $this->quoteIdentifier($colSelf);
+        $quotedColPivot = $this->quoteIdentifier($colPivot);
+
+        $sql = "SELECT {$quotedMainTable}.* FROM {$quotedMainTable}
+            INNER JOIN {$quotedPivotTable} ON {$quotedPivotTable}.{$quotedColSelf} = {$quotedMainTable}.{$quotedIdColumn}
+            WHERE {$quotedPivotTable}.{$quotedColPivot} = :id";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $pivotId]);
@@ -202,7 +254,9 @@ abstract class AbstractRepository
         if (empty($values)) return [];
 
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
-        $sql = "SELECT * FROM {$this->getTable()} WHERE {$field} IN ($placeholders)";
+        $table = $this->quoteTableName($this->getTable());
+        $column = $this->quoteColumn($field);
+        $sql = "SELECT * FROM {$table} WHERE {$column} IN ($placeholders)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($values);
         $rows = $stmt->fetchAll();
