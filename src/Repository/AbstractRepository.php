@@ -4,22 +4,17 @@ declare(strict_types=1);
 
 namespace NixPHP\ORM\Repository;
 
+use Exception;
 use NixPHP\ORM\Core\EntityInterface;
 use PDO;
-use function NixPHP\Database\database;
+use Throwable;
 use function NixPHP\ORM\em;
 
 abstract class AbstractRepository
 {
-    protected ?PDO $pdo;
-
-    public function __construct(?PDO $pdo = null)
-    {
-        $this->pdo = $pdo ?? database();
-
-        if (null === $this->pdo) {
-            throw new \RuntimeException('No database connection available.');
-        }
+    public function __construct(
+        protected PDO $pdo
+    ) {
     }
 
     /**
@@ -189,6 +184,7 @@ abstract class AbstractRepository
      * @param mixed  $value
      *
      * @return EntityInterface
+     * @throws Exception
      */
     public function findOrCreateBy(string $field, mixed $value): EntityInterface
     {
@@ -232,7 +228,7 @@ abstract class AbstractRepository
      * @param mixed  $value
      *
      * @return EntityInterface
-     * @throws \Exception
+     * @throws Throwable
      */
     protected function create(string $field, mixed $value): EntityInterface
     {

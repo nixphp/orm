@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 use NixPHP\Core\Container;
 use NixPHP\ORM\Core\EntityManager;
+use NixPHP\ORM\Repository\RepositoryFactory;
 use NixPHP\Database\Core\Database;
 use function NixPHP\app;
 
 app()->container()->set(
     EntityManager::class,
     fn(Container $container) =>
-        new EntityManager(
-            $container->get(Database::class)->getConnection()
-        )
+        new EntityManager($container->get(Database::class)->getConnection())
+);
+
+app()->container()->set(
+    RepositoryFactory::class,
+    fn(Container $container) =>
+        new RepositoryFactory($container->get(Database::class)->getConnection())
 );

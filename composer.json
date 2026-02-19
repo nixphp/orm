@@ -12,19 +12,15 @@
   ],
   "autoload": {
     "psr-4": {
-      "NixPHP\\ORM\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
+      "NixPHP\\ORM\\": "src/",
       "Tests\\": "tests/"
     }
   },
   "require": {
     "php": ">=8.3",
     "ext-pdo": "*",
-    "nixphp/framework": "^0.1.0",
-    "nixphp/database": "^0.1.0"
+    "nixphp/framework": "^v0.1.2",
+    "nixphp/database": "v0.1.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^12.1",

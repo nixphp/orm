@@ -4,8 +4,8 @@ namespace NixPHP\ORM;
 
 use NixPHP\ORM\Core\EntityManager;
 use NixPHP\ORM\Repository\AbstractRepository;
+use NixPHP\ORM\Repository\RepositoryFactory;
 use function NixPHP\app;
-use function NixPHP\Database\database;
 
 function em(): EntityManager
 {
@@ -20,5 +20,5 @@ function em(): EntityManager
  */
 function repo(string $repository): AbstractRepository
 {
-    return new $repository(database());
+    return app()->container()->get(RepositoryFactory::class)->create($repository);
 }

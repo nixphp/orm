@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace NixPHP\ORM\Core;
 
-use Exception;
+use NixPHP\ORM\Exception\DatabaseException;
 use PDO;
+use Throwable;
 
 class EntityManager
 {
@@ -66,7 +67,7 @@ class EntityManager
      * @param EntityInterface $root
      *
      * @return void
-     * @throws Exception
+     * @throws Throwable
      */
     public function save(EntityInterface $root): void
     {
@@ -102,10 +103,15 @@ class EntityManager
             }
 
             $this->commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->rollBack();
-            throw $e;
+            throw new DatabaseException($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    public function clear(): void
+    {
+        $this->stored = [];
     }
 
     /**

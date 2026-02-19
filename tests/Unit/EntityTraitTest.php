@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit;
+
+use Tests\Fixtures\Player;
+use Tests\Fixtures\Team;
+use Tests\NixPHPTestCase;
+
+class EntityTraitTest extends NixPHPTestCase
+{
+    public function testGetFieldsIgnoresRelationObjects(): void
+    {
+        $player = new Player([
+            'name' => 'Scout',
+            'age' => 7,
+        ]);
+
+        $player->addTeam(new Team(['name' => 'Red']));
+
+        $fields = $player->getFields();
+
+        $this->assertSame([
+            'name' => 'Scout',
+            'age' => 7,
+        ], $fields);
+        $this->assertArrayNotHasKey('teams', $fields);
+    }
+
+    public function testGetRelationsIncludesTeamsArray(): void
+    {
+        $player = new Player([
+            'name' => 'Scout',
+            'age' => 7,
+        ]);
+
+        $team = new Team(['name' => 'Red']);
+        $player->addTeam($team);
+
+        $relations = $player->getRelations();
+
+        $this->assertArrayHasKey('teams', $relations);
+        $this->assertSame([$team], $relations['teams']);
+    }
+}
