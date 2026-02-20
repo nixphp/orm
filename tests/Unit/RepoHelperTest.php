@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\TestCase;
 use Tests\Fixtures\DummyRepository;
-use Tests\NixPHPTestCase;
 use function NixPHP\ORM\repo;
 
-class RepoHelperTest extends NixPHPTestCase
+class RepoHelperTest extends TestCase
 {
     public function testRepoReturnsRepositoryFromFactory(): void
     {

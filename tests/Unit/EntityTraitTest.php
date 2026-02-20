@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\TestCase;
 use Tests\Fixtures\Player;
 use Tests\Fixtures\Team;
-use Tests\NixPHPTestCase;
 
-class EntityTraitTest extends NixPHPTestCase
+class EntityTraitTest extends TestCase
 {
     public function testGetFieldsIgnoresRelationObjects(): void
     {
@@ -25,7 +25,6 @@ class EntityTraitTest extends NixPHPTestCase
             'name' => 'Scout',
             'age' => 7,
         ], $fields);
-        $this->assertArrayNotHasKey('teams', $fields);
     }
 
     public function testGetRelationsIncludesTeamsArray(): void

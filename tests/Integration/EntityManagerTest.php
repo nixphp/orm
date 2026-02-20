@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
+use RuntimeException;
 use Tests\Fixtures\Player;
 use Tests\Fixtures\Team;
 use Tests\NixPHPTestCase;
@@ -46,5 +47,18 @@ class EntityManagerTest extends NixPHPTestCase
 
         $this->assertSame(1, (int) self::$pdo->query('SELECT COUNT(*) FROM players')->fetchColumn());
         $this->assertSame(1, (int) self::$pdo->query('SELECT COUNT(*) FROM player_team')->fetchColumn());
+        $this->assertSame(1, (int) self::$pdo->query('SELECT COUNT(*) FROM teams')->fetchColumn());
+    }
+
+    public function testClearThrowsWhenTransactionActive(): void
+    {
+        $this->expectException(RuntimeException::class);
+        em()->begin();
+
+        try {
+            em()->clear();
+        } finally {
+            em()->rollback();
+        }
     }
 }

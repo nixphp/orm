@@ -58,4 +58,15 @@ class NixPHPTestCase extends TestCase
         $pdo->exec('DELETE FROM players');
         $pdo->exec('DELETE FROM teams');
     }
+
+    /**
+     * Ensure fixtures are cleared before every test.
+     *
+     * Subclasses overriding this method must call parent::setUp() first.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->clearFixtures();
+    }
 }

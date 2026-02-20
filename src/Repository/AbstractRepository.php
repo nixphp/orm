@@ -7,21 +7,26 @@ namespace NixPHP\ORM\Repository;
 use Exception;
 use InvalidArgumentException;
 use NixPHP\ORM\Core\EntityInterface;
+use NixPHP\ORM\Core\EntityManager;
+use NixPHP\ORM\Exception\DatabaseException;
 use PDO;
 use Throwable;
-use function NixPHP\ORM\em;
+use function NixPHP\app;
 
 abstract class AbstractRepository
 {
-    public function __construct(
-        protected PDO $pdo
-    ) {
-    }
-
     /**
      * @var array<int, string>
      */
     protected array $allowedColumns = [];
+
+    private array $columnWhitelistCache = [];
+
+    public function __construct(
+        protected PDO $pdo,
+        protected EntityManager $entityManager
+    ) {
+    }
 
     /**
      * @return class-string<EntityInterface>
@@ -34,7 +39,7 @@ abstract class AbstractRepository
     protected function getEntity(): EntityInterface
     {
         $class = $this->getEntityClass();
-        return new $class();
+        return app()->container()->make($class);
     }
 
     /**
@@ -87,10 +92,14 @@ abstract class AbstractRepository
             return $this->allowedColumns;
         }
 
+        if ($this->columnWhitelistCache !== []) {
+            return $this->columnWhitelistCache;
+        }
+
         $entity = $this->getEntity();
         $fields = array_keys($entity->getFields());
-
-        return array_unique(array_merge([$entity->getPrimaryKey()], $fields));
+        $this->columnWhitelistCache = array_unique(array_merge([$entity->getPrimaryKey()], $fields));
+        return $this->columnWhitelistCache;
     }
 
     protected function quoteIdentifier(string $identifier): string
@@ -99,7 +108,20 @@ abstract class AbstractRepository
             throw new InvalidArgumentException("Invalid identifier: {$identifier}");
         }
 
-        return '"' . str_replace('"', '""', $identifier) . '"';
+        $quote = $this->getIdentifierQuote();
+        return $quote . str_replace($quote, $quote . $quote, $identifier) . $quote;
+    }
+
+    protected function getIdentifierQuote(): string
+    {
+        $driver = strtolower($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) ?? '');
+
+        return match ($driver) {
+            'mysql' => '`',
+            'pgsql' => '"',
+            'sqlite' => '"',
+            default => '"',
+        };
     }
 
     protected function quoteColumn(string $column): string
@@ -217,7 +239,9 @@ abstract class AbstractRepository
         $pluralTable = $this->getTable();
         $quotedMainTable = $this->quoteTableName($pluralTable);
         $quotedPivotTable = $this->quoteTableName($pivotTable);
-        $quotedIdColumn = $this->quoteIdentifier('id');
+        $entity = $this->getEntity();
+        $primaryKey = $entity->getPrimaryKey();
+        $quotedIdColumn = $this->quoteIdentifier($primaryKey);
         $quotedColSelf = $this->quoteIdentifier($colSelf);
         $quotedColPivot = $this->quoteIdentifier($colPivot);
 
@@ -282,13 +306,13 @@ abstract class AbstractRepository
      * @param mixed  $value
      *
      * @return EntityInterface
-     * @throws Throwable
+     * @throws DatabaseException
      */
     protected function create(string $field, mixed $value): EntityInterface
     {
         $class = $this->getEntityClass();
         $entity = new $class([$field => $value]);
-        em()->save($entity);
+        $this->entityManager->save($entity);
         return $entity;
     }
 

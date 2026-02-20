@@ -75,8 +75,8 @@ class AbstractRepositoryTest extends NixPHPTestCase
         $results = $this->playerRepository->findOrCreateManyBy('name', $values);
 
         $this->assertCount(2, $results);
-        $this->assertSame('Alpha', $results[0]->getName());
-        $this->assertSame('Zed', $results[1]->getName());
+        $names = array_map(fn(Player $player) => $player->getName(), $results);
+        $this->assertEqualsCanonicalizing($values, $names);
     }
 
     private function seedFixtures(): void

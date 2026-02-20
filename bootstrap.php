@@ -17,5 +17,8 @@ app()->container()->set(
 app()->container()->set(
     RepositoryFactory::class,
     fn(Container $container) =>
-        new RepositoryFactory($container->get(Database::class)->getConnection())
+        new RepositoryFactory(
+            $container->get(Database::class)->getConnection(),
+            $container->get(EntityManager::class)
+        )
 );

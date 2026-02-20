@@ -4,20 +4,26 @@ declare(strict_types=1);
 
 namespace NixPHP\ORM\Repository;
 
-use PDO;
 use InvalidArgumentException;
+use NixPHP\ORM\Core\EntityManager;
+use PDO;
 use function NixPHP\app;
 
 class RepositoryFactory
 {
+    protected EntityManager $entityManager;
+
     /**
      * @var array<class-string<AbstractRepository>, AbstractRepository>
      */
-    protected array $instances = [];
+    private array $instances = [];
 
     public function __construct(
-        protected PDO $pdo
-    ) {}
+        protected PDO $pdo,
+        EntityManager $entityManager
+    ) {
+        $this->entityManager = $entityManager;
+    }
 
     /**
      * @template T of AbstractRepository
@@ -35,6 +41,9 @@ class RepositoryFactory
             throw new InvalidArgumentException("{$repository} must extend " . AbstractRepository::class);
         }
 
-        return $this->instances[$repository] ??= app()->container()->make($repository, [$this->pdo]);
+        return $this->instances[$repository] ??= app()->container()->make($repository, [
+            $this->pdo,
+            $this->entityManager,
+        ]);
     }
 }
