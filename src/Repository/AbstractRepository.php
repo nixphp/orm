@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace NixPHP\ORM\Repository;
 
+use Exception;
+use InvalidArgumentException;
 use NixPHP\ORM\Core\EntityInterface;
+use NixPHP\ORM\Core\EntityManager;
+use NixPHP\ORM\Exception\DatabaseException;
 use PDO;
-use function NixPHP\Database\database;
-use function NixPHP\ORM\em;
+use Throwable;
+use function NixPHP\app;
 
 abstract class AbstractRepository
 {
-    protected ?PDO $pdo;
+    /**
+     * @var array<int, string>
+     */
+    protected array $allowedColumns = [];
 
-    public function __construct(?PDO $pdo = null)
-    {
-        $this->pdo = $pdo ?? database();
+    private array $columnWhitelistCache = [];
 
-        if (null === $this->pdo) {
-            throw new \RuntimeException('No database connection available.');
-        }
+    public function __construct(
+        protected PDO $pdo,
+        protected EntityManager $entityManager
+    ) {
     }
 
     /**
@@ -33,7 +39,7 @@ abstract class AbstractRepository
     protected function getEntity(): EntityInterface
     {
         $class = $this->getEntityClass();
-        return new $class();
+        return app()->container()->make($class);
     }
 
     /**
@@ -80,12 +86,65 @@ abstract class AbstractRepository
         return implode('_', $items);
     }
 
+    protected function getColumnWhitelist(): array
+    {
+        if ($this->allowedColumns !== []) {
+            return $this->allowedColumns;
+        }
+
+        if ($this->columnWhitelistCache !== []) {
+            return $this->columnWhitelistCache;
+        }
+
+        $entity = $this->getEntity();
+        $fields = array_keys($entity->getFields());
+        $this->columnWhitelistCache = array_unique(array_merge([$entity->getPrimaryKey()], $fields));
+        return $this->columnWhitelistCache;
+    }
+
+    protected function quoteIdentifier(string $identifier): string
+    {
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $identifier)) {
+            throw new InvalidArgumentException("Invalid identifier: {$identifier}");
+        }
+
+        $quote = $this->getIdentifierQuote();
+        return $quote . str_replace($quote, $quote . $quote, $identifier) . $quote;
+    }
+
+    protected function getIdentifierQuote(): string
+    {
+        $driver = strtolower($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) ?? '');
+
+        return match ($driver) {
+            'mysql' => '`',
+            'pgsql' => '"',
+            'sqlite' => '"',
+            default => '"',
+        };
+    }
+
+    protected function quoteColumn(string $column): string
+    {
+        if (!in_array($column, $this->getColumnWhitelist(), true)) {
+            throw new InvalidArgumentException("Column not allowed: {$column}");
+        }
+
+        return $this->quoteIdentifier($column);
+    }
+
+    protected function quoteTableName(string $table): string
+    {
+        return $this->quoteIdentifier($table);
+    }
+
     /**
      * @return array
      */
     public function findAll(): array
     {
-        $sql = "SELECT * FROM {$this->getTable()}";
+        $table = $this->quoteTableName($this->getTable());
+        $sql = "SELECT * FROM {$table}";
         $stmt = $this->pdo->query($sql);
         $rows = $stmt->fetchAll();
 
@@ -108,7 +167,8 @@ abstract class AbstractRepository
         ?int $limit    = null,
         ?int $offset   = null
     ): array {
-        $sql = "SELECT * FROM {$this->getTable()} WHERE 1=1";
+        $table = $this->quoteTableName($this->getTable());
+        $sql = "SELECT * FROM {$table} WHERE 1=1";
         $params = [];
 
         if (is_string($criteria)) {
@@ -116,7 +176,8 @@ abstract class AbstractRepository
         }
 
         foreach ($criteria as $field => $val) {
-            $sql .= " AND {$field} = :{$field}";
+            $column = $this->quoteColumn($field);
+            $sql .= " AND {$column} = :{$field}";
             $params[":{$field}"] = $val;
         }
 
@@ -124,7 +185,8 @@ abstract class AbstractRepository
             $parts = [];
             foreach ($orderBy as $field => $dir) {
                 $dir = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
-                $parts[] = "{$field} {$dir}";
+                $quoted = $this->quoteColumn($field);
+                $parts[] = "{$quoted} {$dir}";
             }
             $sql .= " ORDER BY " . implode(', ', $parts);
         }
@@ -174,9 +236,18 @@ abstract class AbstractRepository
         $colSelf       = $thisTable . '_id';
         $colPivot      = $relatedTable . '_id';
 
-        $sql = "SELECT {$thisTable}s.* FROM {$thisTable}s
-            INNER JOIN {$pivotTable} ON {$pivotTable}.{$colSelf} = {$thisTable}s.id
-            WHERE {$pivotTable}.{$colPivot} = :id";
+        $pluralTable = $this->getTable();
+        $quotedMainTable = $this->quoteTableName($pluralTable);
+        $quotedPivotTable = $this->quoteTableName($pivotTable);
+        $entity = $this->getEntity();
+        $primaryKey = $entity->getPrimaryKey();
+        $quotedIdColumn = $this->quoteIdentifier($primaryKey);
+        $quotedColSelf = $this->quoteIdentifier($colSelf);
+        $quotedColPivot = $this->quoteIdentifier($colPivot);
+
+        $sql = "SELECT {$quotedMainTable}.* FROM {$quotedMainTable}
+            INNER JOIN {$quotedPivotTable} ON {$quotedPivotTable}.{$quotedColSelf} = {$quotedMainTable}.{$quotedIdColumn}
+            WHERE {$quotedPivotTable}.{$quotedColPivot} = :id";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $pivotId]);
@@ -189,6 +260,7 @@ abstract class AbstractRepository
      * @param mixed  $value
      *
      * @return EntityInterface
+     * @throws Exception
      */
     public function findOrCreateBy(string $field, mixed $value): EntityInterface
     {
@@ -206,7 +278,9 @@ abstract class AbstractRepository
         if (empty($values)) return [];
 
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
-        $sql = "SELECT * FROM {$this->getTable()} WHERE {$field} IN ($placeholders)";
+        $table = $this->quoteTableName($this->getTable());
+        $column = $this->quoteColumn($field);
+        $sql = "SELECT * FROM {$table} WHERE {$column} IN ($placeholders)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($values);
         $rows = $stmt->fetchAll();
@@ -232,13 +306,13 @@ abstract class AbstractRepository
      * @param mixed  $value
      *
      * @return EntityInterface
-     * @throws \Exception
+     * @throws DatabaseException
      */
     protected function create(string $field, mixed $value): EntityInterface
     {
         $class = $this->getEntityClass();
         $entity = new $class([$field => $value]);
-        em()->save($entity);
+        $this->entityManager->save($entity);
         return $entity;
     }
 

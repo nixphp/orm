@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace NixPHP\ORM\Core;
 
-use Exception;
+use NixPHP\ORM\Exception\DatabaseException;
 use PDO;
+use RuntimeException;
+use Throwable;
 
 class EntityManager
 {
@@ -66,7 +68,7 @@ class EntityManager
      * @param EntityInterface $root
      *
      * @return void
-     * @throws Exception
+     * @throws DatabaseException
      */
     public function save(EntityInterface $root): void
     {
@@ -102,10 +104,22 @@ class EntityManager
             }
 
             $this->commit();
-        } catch (Exception $e) {
-            $this->rollBack();
-            throw $e;
+        } catch (Throwable $e) {
+            $this->rollback();
+            $code = $e->getCode();
+            $normalizedCode = is_numeric($code) ? (int)$code : 0;
+            throw new DatabaseException($e->getMessage(), $normalizedCode, $e);
         }
+    }
+
+    public function clear(): void
+    {
+        if ($this->transactionLevel > 0) {
+            throw new RuntimeException('Cannot clear EntityManager while a transaction is active.');
+        }
+
+        $this->stored = [];
+        $this->transactionLevel = 0;
     }
 
     /**
