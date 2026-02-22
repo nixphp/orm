@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6ab409c5403e11855f6ab4508ebbc1e1",
+    "content-hash": "bb02c48a0a19a160f7d01f423e6b76dd",
     "packages": [
         {
             "name": "nixphp/database",
-            "version": "v0.1.1",
+            "version": "v0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nixphp/database.git",
-                "reference": "2cd8c7e31da3b100b0bd61b73389f28ece853d01"
+                "reference": "5574fdb22c3e95ae905438375ade012b86e52ee4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nixphp/database/zipball/2cd8c7e31da3b100b0bd61b73389f28ece853d01",
-                "reference": "2cd8c7e31da3b100b0bd61b73389f28ece853d01",
+                "url": "https://api.github.com/repos/nixphp/database/zipball/5574fdb22c3e95ae905438375ade012b86e52ee4",
+                "reference": "5574fdb22c3e95ae905438375ade012b86e52ee4",
                 "shasum": ""
             },
             "require": {
@@ -48,22 +48,22 @@
             "description": "NixPHP Database Plugin to work with various storage solutions.",
             "support": {
                 "issues": "https://github.com/nixphp/database/issues",
-                "source": "https://github.com/nixphp/database/tree/v0.1.1"
+                "source": "https://github.com/nixphp/database/tree/v0.1.2"
             },
-            "time": "2025-12-03T20:56:43+00:00"
+            "time": "2026-02-21T18:52:34+00:00"
         },
         {
             "name": "nixphp/framework",
-            "version": "v0.1.2",
+            "version": "v0.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nixphp/framework.git",
-                "reference": "3aa894134fcd22e20d8262abdbaf3ec5ab23bf5c"
+                "reference": "7e3650a86c34ffa561ccc65804f1f37e15cf6391"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nixphp/framework/zipball/3aa894134fcd22e20d8262abdbaf3ec5ab23bf5c",
-                "reference": "3aa894134fcd22e20d8262abdbaf3ec5ab23bf5c",
+                "url": "https://api.github.com/repos/nixphp/framework/zipball/7e3650a86c34ffa561ccc65804f1f37e15cf6391",
+                "reference": "7e3650a86c34ffa561ccc65804f1f37e15cf6391",
                 "shasum": ""
             },
             "require": {
@@ -104,9 +104,9 @@
             "description": "NixPHP - the ultra-light, functional PHP framework for fast microservices and APIs.",
             "support": {
                 "issues": "https://github.com/nixphp/framework/issues",
-                "source": "https://github.com/nixphp/framework/tree/v0.1.2"
+                "source": "https://github.com/nixphp/framework/tree/v0.1.3"
             },
-            "time": "2025-12-31T12:28:02+00:00"
+            "time": "2026-02-22T17:28:20+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -2163,5 +2163,5 @@
         "ext-pdo": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.2.0"
 }
